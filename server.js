@@ -14,7 +14,7 @@ airplay.serverInfo((err, msg, info) => {
 })
 
 app.use((req, res, next) => {
-  console.log('REQ:', req.path, req.body)
+  console.log(new Date(), req.method, req.path, req.query, req.body)
   next()
 })
 
