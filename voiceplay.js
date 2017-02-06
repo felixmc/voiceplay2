@@ -15,7 +15,7 @@ var server = require('./server.js');
 
 server.configure({
   iTunesPath: '/home/pi/media',           // iTunes media library path
-  youtubeApiKey: 'AIzaSyDT6ebsYYqQGOY95izP1jtilUsrYdSKXIE',   // example YouTube API key
+  youtubeApiKey: process.env.YOUTUBE_KEY,   // example YouTube API key
   port: 3112
 });
 
