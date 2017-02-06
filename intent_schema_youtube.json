@@ -1,13 +1,13 @@
 {
-	"intents": [
-		{
-			"intent": "YouTube",
-			"slots": [
-				{
-					"name": "Question",
-					"type": "LITERAL"
-				}
-			]
-		}
-	]
+  "intents": [
+    {
+      "intent": "YouTube_PlayVideo",
+      "slots": [
+        {
+          "name": "Title",
+          "type": "LITERAL"
+        }
+      ]
+    }
+  ]
 }

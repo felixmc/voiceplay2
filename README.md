@@ -17,23 +17,20 @@ Voiceplay is comprised of a node-based server that runs on your local network an
 
 
 ### Requirements ###
-* Amazon Echo
-* Apple TV / Airplay receiver (tested on Apple TV 3 with Yosemite).
+* Amazon Alexa-enabled device
+* Apple TV / Airplay receiver (tested on Apple TV 3 with Raspbian)
 * Node installed - https://nodejs.org/en/
 * Amazon Apps & Services Developer Account - https://developer.amazon.com/appsandservices
 * Amazon Web Services Account (for your Lambda redirect functions) - http://aws.amazon.com
 * YouTube API key via the Google Developers Portal (for searching YouTube) - https://console.developers.google.com
-	
+
 
 ### Setup ###
-* If you haven't already, install node.
-* With npm, install the latest version of voiceplay:
+* If you haven't already, install node
+* Clone the git repo
+* Run `npm install` in the project directory
 
-```
-npm install voiceplay
-```
-
-* Using Finder, Navigate to the folder where the voiceplay module is installed and open voiceplay.js with your editor of choice to specify its start arguments: your YouTube API key and the path to your iTunes directory.
+* Using Finder, Navigate to the folder where voiceplay is installed and open voiceplay.js with your editor of choice to specify its start arguments: your YouTube API key and the path to your iTunes directory.
 
 
 
@@ -55,10 +52,10 @@ node voiceplay
 * If successfully running, you will see:
 
 ```
-Amazon Echo / Alexa Voice-Activated Airplay Media Server listening at http://192.168.0.12:8080 
+Amazon Echo / Alexa Voice-Activated Airplay Media Server listening at http://192.168.0.12:8080
 Airplay device discovered: Apple TV.  Ready to start receiving requests from the AWS Lambda function.
 ```
-* Sign up or log in to the [AWS Console](http://console.aws.amazon.com) and choose Lambda from the Services > All Services menu. 
+* Sign up or log in to the [AWS Console](http://console.aws.amazon.com) and choose Lambda from the Services > All Services menu.
 * Create a Lambda function, skip the intro wizard, name this function 'YouTube' and paste the contents of 'lambda redirect.js'.  A description isn't required.
 * Repeat the process for the iTunes media function, naming it iTunes (the names of these functions on the AWS portal isn't important). Take note of each function's ARN endpoint.
 * Seperate from AWS, log in to your [Amazon Apps & services Developer Account](https://developer.amazon.com/appsandservices) and under Apps & Services, choose Alexa.

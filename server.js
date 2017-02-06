@@ -1,12 +1,11 @@
-var ytdl = require('ytdl-core');
-var app = (require('express'))();
-var youtube = new (require('youtube-node'))();
-var intents = require('./intents.js');
-var dns = require('dns');
-var AirPlay = require('airplay-protocol')
+const app = (require('express'))()
+
+const parser = require('./parser')
+const dns = require('dns')
+const AirPlay = require('airplay-protocol')
 
 if (!process.env.AIRPLAY_HOST) console.warn('AIRPLAY_HOST  is not defined')
-var airplay = new AirPlay(process.env.AIRPLAY_HOST, 7000)
+const airplay = new AirPlay(process.env.AIRPLAY_HOST, 7000)
 
 airplay.serverInfo((err, msg, info) => {
   if (err) console.log('AirPlay Connection Error:', err)
@@ -21,8 +20,7 @@ app.use((req, res, next) => {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 //// General state management ~ current query, intent, view history, config, etc.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-var context = {
+const context = {
   appname: 'Amazon Echo / Alexa Voice-Activated Airplay Media Server',
   server: null,
   intent: null,
@@ -50,20 +48,20 @@ var context = {
     host: null,
     port: 3112
   },
-};
+}
 
-var PROMPTS = {
+const PROMPTS = {
   NONE: -1,
   LAUNCH: 0,
   RESTART_VIDEO: 1,
   NEXT_VIDEO: 2,
   TROUBLESHOOT: 3,
   CANCEL: 4
-};
+}
 
 exports.configure = function (c) {
-  context.config = c;
-};
+  context.config = c
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 //// Node Web Server - the app is essentiall a web server that exposes 3 endpoints:
@@ -71,45 +69,41 @@ exports.configure = function (c) {
 ////   ---- /itunes     -- serves the iTunes media library content request by AppleTV
 ////   ---- /youtube    -- serves the YouTube video as requested by the AppleTV
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-exports.start = function () {
-  context.server = app.listen(context.config.port, function () {
-    dns.lookup(require('os').hostname(), function (err, address, fam) {
-      context.config.host = address || 'localhost';
+exports.start = () => {
+  context.server = app.listen(context.config.port, () => {
+    dns.lookup(require('os').hostname(), (err, address, fam) => {
+      context.config.host = address || 'localhost'
 
       console.log('%s listening at http://%s:%s',
         context.appname,
         context.config.host,
-        context.config.port);
-    });
-  });
-};
-
-
+        context.config.port)
+    })
+  })
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 //// On /itunes, the app serves the content of your iTunes media library.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-app.get('/itunes/', function (req, res) {
-  var fs = require('fs');
-  var file = context.config.iTunesPath + getITunesFileNameFromRequest(req);
-  fs.exists(file, function (exists) {
-
+app.get('/itunes/', (req, res) => {
+  var fs = require('fs')
+  var file = context.config.iTunesPath + getITunesFileNameFromRequest(req)
+  fs.exists(file, exists => {
     if (exists) {
-      fs.createReadStream(file).pipe(res);
+      fs.createReadStream(file).pipe(res)
     } else {
-      render404(req, res);
+      render404(req, res)
     }
-  });
-
-});
+  })
+})
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 //// On /videos/{videoId} via ytdl the app streams the corresponding YouTube video supplied by the parameter
 //// videoId which is the YouTuve video's unique ID.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-app.get('/videos/:videoId', function (req, res) {
-  var videoId = req.params.videoId;
-  var videoUrl = 'https://www.youtube.com/watch?v=' + videoId;
+app.get('/videos/:videoId', (req, res) => {
+  var videoId = req.params.videoId
+  var videoUrl = 'https://www.youtube.com/watch?v=' + videoId
 
   ytdl(videoUrl, { quality: 'highest', filter: function (format) { return format.container === 'mp4'; } })
     .pipe(res);
@@ -119,98 +113,28 @@ app.get('/videos/:videoId', function (req, res) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 //// This endpoint receives the raw request from the AWS Lambda service and parses it using intents.js
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-app.get('/', function (req, res) {
+app.get('/', (req, res) => {
+  const query = getQueryFromRequest(req)
+  const intent = query && query.json != undefined && query.json != 'undefined' ? JSON.parse(query.json) : null
 
-  context.history.push(context.intent);
-  context.intent = getIntentFromRequest(req);
-  context.request = req;
-  context.response = res;
-
-  //Figure out what to do with the request.
-  parseIntent(function () {
-    if (context.cancel) {
-      context.prompt = PROMPTS.NONE;
-      context.userPrompted = false;
-      context.cancel = false;
-      context.intent.responseEnd = true;
+  // Figure out what to do with the request.
+  parser.parseIntent(intent, reply => {
+    if (reply.mediaUrl) {
+      airplay.play(reply.mediaUrl, err => {
+        if (err) {
+          res.json({
+            text: 'I\'m having trouble connecting to your AirPlay device.  Please make sure it\'s on.',
+            shouldEndSession: true,
+          })
+        } else {
+          res.json(reply)
+        }
+      })
+    } else {
+      res.json(reply)
     }
-
-    if (playbackNotCancelled()) {
-      renderPlayback(context.intent);
-    }
-
-    console.log('RES:', {
-      text: context.intent.responseText,
-      shouldEndSession: context.intent.responseEnd
-    })
-
-    //Respond the AWS lambda service
-    res.json({
-      text: context.intent.responseText,
-      shouldEndSession: context.intent.responseEnd
-    });
-
-  });
-});
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-//// Parse intent to determine what to do.
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-function parseIntent(callback) {
-
-  determineIfUserPrompted(context.intent);
-
-  if (context.intent.responseEnd && !context.cancel) {
-
-    var d = intents.determineIntent(context.intent.query);
-    console.log('INTENT QUERY:', context.intent.query, d)
-
-    if (d && d.name) {
-      context.userPrompted = false;
-      context.cancel = true;
-      context.intent.responseEnd = true;
-      context.intent.cancel = true;
-
-      switch (d.name) {
-        case 'movieinfo':
-          respondWithMovieInfo();
-          break;
-        case 'pause':
-          respondWithMoviePause();
-          break;
-        case 'resume':
-          respondWithMovieResume();
-          break;
-        case 'play':
-          searchByIntent(-1, callback);
-          return;
-        case 'skip':
-          respondWithMovieSkipping(callback);
-          return;
-        case 'replay':
-          searchByIntent(context.playbackIndex, callback);
-          return;
-        case 'open-video':
-          respondWithOpeningMovieOnServer();
-          break;
-        case 'back':
-          if (context.playbackIndex > -1) {
-            respondWithMovieSkippingBack(callback);
-            return;
-          } else {
-            context.intent.responseText = 'Sorry, there\'s no video to go back to.';
-            break;
-          }
-
-      }
-
-    }
-
-  }
-
-  callback(context.intent);
-}
+  })
+})
 
 function respondWithMovieInfo() {
   if (context.video) {
@@ -320,22 +244,17 @@ function searchByIntent(playbackIndex, callback) {
       break;
 
     case 'iTunes':
-
       searchMovieDirectory(function (file) {
         context.intent.video.data = file;
         context.intent.video.url = getServeriTunesPath(context.request, file);
         context.intent.video.title = parseMovieTitle(file);
         context.intent.responseText = 'Now playing ' + context.intent.video.title + ' from your iTunes library.';
-
         callback(context.intent);
-
       });
 
       break;
     default:
-
       callback(context.intent);
-
       break;
   }
 
@@ -378,33 +297,30 @@ function render404(req, res) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 //// Searches the supplied itunes movie directory for the query provided.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-function searchMovieDirectory(callback) {
-  require('fs').readdir(context.config.iTunesPath, function (err, files) {
-    if (err) throw err;
+function searchMovieDirectory (callback) {
+  require('fs').readdir(context.config.iTunesPath, (err, files) => {
+    if (err) throw err
 
-    var matchFile;
-    var matchCount = 0;
-    files.forEach(function (file) {
-      file = file.toLowerCase();
+    var matchFile
+    var matchCount = 0
+    files.forEach(file => {
+      file = file.toLowerCase()
 
-      var t = intents.generateSearchQuery(context.intent.query).split(' ');
+      var t = intents.generateSearchQuery(context.intent.query).split(' ')
       var c = 0;
 
       t.forEach(function (e1) {
-
-        c += (file.indexOf(e1) > -1 ? 1 : 0);
-
-      }, this);
+        c += (file.indexOf(e1) > -1 ? 1 : 0)
+      }, this)
 
       if (c > matchCount) {
-        matchFile = file;
-        matchCount = c;
+        matchFile = file
+        matchCount = c
       }
+    })
 
-    });
-
-    callback(matchFile);
-  });
+    callback(matchFile)
+  })
 }
 
 
@@ -414,23 +330,20 @@ function searchMovieDirectory(callback) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 function searchForYouTubeVideos(callback) {
   if (context.intent && context.intent.video && context.intent.video.data) {
-    callback(context.intent.video.data);
+    callback(context.intent.video.data)
   } else {
-    youtube.setKey(context.config.youtubeApiKey);
-    youtube.addParam('type', 'video');
+    youtube.setKey(context.config.youtubeApiKey)
+    youtube.addParam('type', 'video')
     youtube.search(context.statement, 10, function (error, result) {
       if (!error && result && result.items) {
-        context.youtubeResults = result.items;
-
-        populateVideoMetaData(context.youtubeResults[context.playbackIndex]);
-
-        callback(context.intent.video.youTubeVideoId);
+        context.youtubeResults = result.items
+        populateVideoMetaData(context.youtubeResults[context.playbackIndex])
+        callback(context.intent.video.youTubeVideoId)
       } else {
-        callback(null);
+        callback(null)
       }
-    });
+    })
   }
-
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -449,10 +362,11 @@ function populateVideoMetaData(item) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 //// Here we parse the request to determine what the user's intent was.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-function getIntentFromRequest(req) {
-  var query = getQueryFromRequest(req);
-  var json = query && query.json != undefined && query.json != 'undefined' ? JSON.parse(query.json) : null;
-  var queryText = json && json.slots.Question ? json.slots.Question.value : null;
+function getIntentFromRequest (req) {
+  var query = getQueryFromRequest(req)
+  var json = query && query.json != undefined && query.json != 'undefined' ? JSON.parse(query.json) : null
+
+  var queryText = json && json.slots.Question ? json.slots.Question.value : null
   var i = json ? json.name : 'launch';
   var responseEnd = true;
   var responseText = '';
@@ -471,6 +385,7 @@ function getIntentFromRequest(req) {
 
   return {
     query: queryText,
+    data: json,
     name: i,
     responseText: responseText,
     responseEnd: responseEnd,
@@ -533,8 +448,8 @@ process.on('uncaughtException', function (err) {
 //// Used for opening safari or chrome.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 function invoke(cmd) {
-  var exec = require('child_process').exec;
+  var exec = require('child_process').exec
   exec(cmd, function (error, stdout, stderr) {
-    console.log(stderr);
-  });
+    console.log(stderr)
+  })
 }
