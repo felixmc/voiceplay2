@@ -120,6 +120,7 @@ app.get('/', (req, res) => {
   // Figure out what to do with the request.
   parser.parseIntent(intent, reply => {
     if (reply.mediaUrl) {
+      console.log('playing media:', reply.mediaUrl)
       airplay.play(reply.mediaUrl, err => {
         if (err) {
           res.json({
