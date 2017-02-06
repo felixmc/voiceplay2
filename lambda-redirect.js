@@ -1,12 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-//// This lambda redirect file can be pasted as a function within AWS Lambda to reroute the Amazon Echo request to 
-//// the server instatiated by voiceplay.js on your local network.  In order for it to function, not only must the lambda function's 
-//// ARN endpoint be property configured on the Amazon Developer Console (where you configure the Alexa skill seperate from AWS Lambda), 
+//// This lambda redirect file can be pasted as a function within AWS Lambda to reroute the Amazon Echo request to
+//// the server instatiated by voiceplay.js on your local network.  In order for it to function, not only must the lambda function's
+//// ARN endpoint be property configured on the Amazon Developer Console (where you configure the Alexa skill seperate from AWS Lambda),
 //// but whatever port you use below must be open and forwarded to the machine running server.js on your local network/intranet.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 var config = {
     host: '68.104.32.7',                                    //ip or hostname of your home network.
-    port: 8080,                                             //port you're running app.js on.
+    port: 3112,                                             //port you're running app.js on.
     appname: 'Alexa Voice-Activated Airplay Media Server'
 };
 

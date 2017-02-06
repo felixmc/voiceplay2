@@ -43,7 +43,7 @@ var context = {
     iTunesPath: '/Volumes/Media/iTunes/Home Videos/',
     youtubeApiKey: '',
     host: null,
-    port: 8080
+    port: 3112
   },
 };
 
