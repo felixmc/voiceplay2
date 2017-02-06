@@ -297,6 +297,7 @@ function setUserPromptForLaunch() {
 }
 
 function searchByIntent(playbackIndex, callback) {
+  console.log('QUERY > ', context.intent.query)
   context.statement = playbackIndex == -1 ? intents.generateSearchQuery(context.intent.query) : context.statement;
   context.youtubeResults = null;
   context.playbackIndex = playbackIndex == -1 ? 0 : playbackIndex;
