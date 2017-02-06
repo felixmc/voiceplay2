@@ -1,4 +1,3 @@
-YouTube_PlayVideo to play {Title}
 YouTube_PlayVideo to play {one |Title}
 YouTube_PlayVideo to play {one two|Title}
 YouTube_PlayVideo to play {one two three|Title}
