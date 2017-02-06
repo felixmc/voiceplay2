@@ -4,7 +4,7 @@
   "description": "Voiceplay is an experimental method of controlling your airplay-connected devices by voice via the Amazon Echo, enabling you to search for and control content from YouTube and your iTunes media library and play it directly on your TV.  ",
   "main": "voiceplay.js",
   "dependencies": {
-    "airplay2": "git+https://github.com/tajddin/node-airplay.git",
+    "airplay2": "git+https://github.com/felixmc/node-airplay.git",
     "natural": "^0.2.1",
     "opennlp": "^1.1.0",
     "youtube-node": "^1.3.0",
