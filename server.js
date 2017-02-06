@@ -4,7 +4,14 @@ var youtube = new (require('youtube-node'))();
 var intents = require('./intents.js');
 var dns = require('dns');
 var AirPlay = require('airplay-protocol')
+
+if (!process.env.AIRPLAY_HOST) console.warn('AIRPLAY_HOST  is not defined')
 var airplay = new AirPlay(process.env.AIRPLAY_HOST, 7000)
+
+airplay.serverInfo((err, msg, info) => {
+  if (err) console.log('AirPlay Connection Error:', err)
+  else console.log(`Connected to ${info.model} at ${process.env.AIRPLAY_HOST}`)
+})
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 //// General state management ~ current query, intent, view history, config, etc.
@@ -64,7 +71,7 @@ exports.configure = function (c) {
 exports.start = function () {
   context.server = app.listen(context.config.port, function () {
     dns.lookup(require('os').hostname(), function (err, address, fam) {
-      context.config.host = address;
+      context.config.host = address || 'localhost';
 
       console.log('%s listening at http://%s:%s',
         context.appname,
