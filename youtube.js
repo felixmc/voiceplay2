@@ -12,7 +12,7 @@ exports.intents = {
         const item = result.items[0]
         console.log('preparing video..', item)
         ytdl('https://www.youtube.com/watch?v=' + item.id.videoId,
-            { quality: 'highest', filter: format => format.container === 'mp4' },
+//            { quality: 'highest', filter: format => format.container === 'mp4' },
             (err, info) => {
               console.log('download response:', err, info)
               if (err || !info || !info.formats.length) {
