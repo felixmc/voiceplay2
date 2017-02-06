@@ -1,12 +1,10 @@
-
-
 var ytdl = require('ytdl-core');
 var app = (require('express'))();
 var youtube = new (require('youtube-node'))();
-var airplay = require('./airplay.js');
 var intents = require('./intents.js');
 var dns = require('dns');
-
+var AirPlay = require('airplay-protocol')
+var airplay = new AirPlay(process.env.AIRPLAY_HOST, 7000)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 //// General state management ~ current query, intent, view history, config, etc.
@@ -61,10 +59,9 @@ exports.configure = function (c) {
 //// Node Web Server - the app is essentiall a web server that exposes 3 endpoints:
 ////   ---- /           -- receives the request from the AWS Lambda service.
 ////   ---- /itunes     -- serves the iTunes media library content request by AppleTV
-////   ---- /youtube    -- serves the YouTube video as requested by the AppleTV 
+////   ---- /youtube    -- serves the YouTube video as requested by the AppleTV
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 exports.start = function () {
-  airplay.startDiscover();
   context.server = app.listen(context.config.port, function () {
     dns.lookup(require('os').hostname(), function (err, address, fam) {
       context.config.host = address;
@@ -73,7 +70,7 @@ exports.start = function () {
         context.appname,
         context.config.host,
         context.config.port);
-      
+
     });
   });
 };
@@ -81,7 +78,7 @@ exports.start = function () {
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-//// On /itunes, the app serves the content of your iTunes media library. 
+//// On /itunes, the app serves the content of your iTunes media library.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/itunes/', function (req, res) {
   var fs = require('fs');
@@ -111,8 +108,7 @@ app.get('/videos/:videoId', function (req, res) {
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-//// This endpoint receives the raw request from the AWS Lambda service and parses it, using intents.js
-//// & airplay.js to determine what to do with the request.
+//// This endpoint receives the raw request from the AWS Lambda service and parses it using intents.js
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 app.get('/', function (req, res) {
 
@@ -133,7 +129,7 @@ app.get('/', function (req, res) {
     if (playbackNotCancelled()) {
       renderPlayback(context.intent);
     }
-    
+
 
     //Respond the AWS lambda service
     res.json({
@@ -340,12 +336,12 @@ function playbackNotCancelled() {
 function renderPlayback() {
   airplay.play(context.intent.video.url, function (e) {
     if (!e) {
-      if (airplay.getConfig().status == -1) {
-        context.intent.responseEnd = true;
-        context.intent.responseText = 'I\'m having trouble connecting to your AirPlay device.';
-      } else {
+      // if (airplay.getConfig().status == -1) {
+      //   context.intent.responseEnd = true;
+      //   context.intent.responseText = 'I\'m having trouble connecting to your AirPlay device.';
+      // } else {
         context.video = context.intent.video;
-      }
+      // }
     } else {
       context.intent.responseEnd = true;
       context.intent.responseText = 'I\'m having trouble connecting to your AirPlay device.  Please make sure it\'s on.';
@@ -514,7 +510,7 @@ process.on('uncaughtException', function (err) {
   else
     console.log(err);
   process.exit(1);
-});     
+});
 
 
 

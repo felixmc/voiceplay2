@@ -2,7 +2,6 @@
 //// intents.js allows us to train the app with examples and classify the inputted statements to match
 //// one of a set of possible intents (e.g. play, pause, skip, movie-info, etc.).
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-var openNLP = require("opennlp");
 var natural = require('natural');
 var nlp = require('nlp_compromise');
 
