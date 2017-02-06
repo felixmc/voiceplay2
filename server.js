@@ -98,10 +98,10 @@ app.get('/itunes/', (req, res) => {
 })
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-//// On /videos/{videoId} via ytdl the app streams the corresponding YouTube video supplied by the parameter
+//// On /youtube/{videoId} via ytdl the app streams the corresponding YouTube video supplied by the parameter
 //// videoId which is the YouTuve video's unique ID.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-app.get('/videos/:videoId', (req, res) => {
+app.get('/youtube/:videoId', (req, res) => {
   var videoId = req.params.videoId
   var videoUrl = 'https://www.youtube.com/watch?v=' + videoId
 
