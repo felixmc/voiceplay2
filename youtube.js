@@ -14,6 +14,7 @@ exports.intents = {
         ytdl('https://www.youtube.com/watch?v=' + item.id.videoId,
             { quality: 'highest', filter: format => format.container === 'mp4' },
             (err, info) => {
+              console.log('download response:', err, info)
               if (err || !info || !info.formats.length) {
                 callback({ text: `Trouble playing YouTube video, please try again later.`, shouldEndSession: true })
               }  else {
