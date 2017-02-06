@@ -52,7 +52,6 @@ var context = {
   },
 };
 
-
 var PROMPTS = {
   NONE: -1,
   LAUNCH: 0,
@@ -61,7 +60,6 @@ var PROMPTS = {
   TROUBLESHOOT: 3,
   CANCEL: 4
 };
-
 
 exports.configure = function (c) {
   context.config = c;
@@ -82,7 +80,6 @@ exports.start = function () {
         context.appname,
         context.config.host,
         context.config.port);
-
     });
   });
 };
@@ -142,6 +139,10 @@ app.get('/', function (req, res) {
       renderPlayback(context.intent);
     }
 
+    console.log('RES:', {
+      text: context.intent.responseText,
+      shouldEndSession: context.intent.responseEnd
+    })
 
     //Respond the AWS lambda service
     res.json({
@@ -163,6 +164,7 @@ function parseIntent(callback) {
   if (context.intent.responseEnd && !context.cancel) {
 
     var d = intents.determineIntent(context.intent.query);
+    console.log('INTENT QUERY:', context.intent.query, d)
 
     if (d && d.name) {
       context.userPrompted = false;
