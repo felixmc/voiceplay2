@@ -444,7 +444,7 @@ function populateVideoMetaData(item) {
 function getIntentFromRequest(req) {
   var query = getQueryFromRequest(req);
   var json = query && query.json != undefined && query.json != 'undefined' ? JSON.parse(query.json) : null;
-  var queryText = json ? json.slots.Question.value : null;
+  var queryText = json && json.slots.Question ? json.slots.Question.value : null;
   var i = json ? json.name : 'launch';
   var responseEnd = true;
   var responseText = '';
