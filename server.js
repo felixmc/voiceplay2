@@ -13,6 +13,11 @@ airplay.serverInfo((err, msg, info) => {
   else console.log(`Connected to ${info.model} at ${process.env.AIRPLAY_HOST}`)
 })
 
+app.use((req, res, next) => {
+  console.log('REQ:', req.path, req.body)
+  next()
+})
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 //// General state management ~ current query, intent, view history, config, etc.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
