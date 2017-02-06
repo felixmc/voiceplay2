@@ -6,9 +6,9 @@ const intents = [
 }, {})
 
 exports.parseIntent = (intent, cb) => {
-  const intents = intent.name.split('_')
-  const appInt = intents[0]
-  const actionInt = intents[1]
+  const intentParts = intent.name.split('_')
+  const appInt = intentParts[0]
+  const actionInt = intentParts[1]
 
   console.log(intents)
   console.log('parsing intent:', appInt, actionInt, intent)
