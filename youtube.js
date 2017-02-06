@@ -10,7 +10,7 @@ exports.intents = {
     youtube.search(title, 10, (err, result) => {
       if (!err && result && result.items) {
         const item = result.items[0]
-        console.log('preparing video..', item, 'https://www.youtube.com/watch?v=' + item.id.videoId')
+        console.log('preparing video..', item, 'https://www.youtube.com/watch?v=' + item.id.videoId)
         ytdl('https://www.youtube.com/watch?v=' + item.id.videoId,
            { quality: 'highest', filter: format => format.container === 'mp4' },
             (err, info) => {
