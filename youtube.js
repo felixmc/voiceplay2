@@ -11,18 +11,17 @@ exports.intents = {
       if (!err && result && result.items) {
         const item = result.items[0]
         console.log('preparing video..', item, 'https://www.youtube.com/watch?v=' + item.id.videoId)
-        cb({ text: `Playing "${item.snippet.title}" from YouTube`, shouldEndSession: true })
-        // ytdl('https://www.youtube.com/watch?v=' + item.id.videoId,
-        //    { quality: 'highest', filter: format => format.container === 'mp4' },
-        //     (err, info) => {
-        //       console.log('download response:', err, info)
-        //       if (err || !info || !info.formats.length) {
-        //         cb({ text: `Trouble playing YouTube video, please try again later.`, shouldEndSession: true })
-        //       }  else {
-        //         const video = info.formats[0]
-        //         cb({ text: `Playing "${item.snippet.title}" from YouTube`, shouldEndSession: true, mediaUrl: video.url })
-        //       }
-        //     })
+        ytdl.getInfo('https://www.youtube.com/watch?v=' + item.id.videoId,
+           { quality: 'highest', filter: format => format.container === 'mp4' },
+            (err, info) => {
+              console.log('download response:', err, info)
+              if (err || !info || !info.formats.length) {
+                cb({ text: `Trouble playing YouTube video, please try again later.`, shouldEndSession: true })
+              }  else {
+                const video = info.formats[0]
+                cb({ text: `Playing "${item.snippet.title}" from YouTube`, shouldEndSession: true, mediaUrl: video.url })
+              }
+            })
       } else {
         cb({ text: 'I could not find any results. Play something else?', shouldEndSession: false })
       }
